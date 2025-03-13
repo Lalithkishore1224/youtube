@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Sketch</title>
+    <style>
+        /* General Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root {
+            --primary: #ff0000;
+            --secondary: #282828;
+            --light: #ffffff;
+            --dark: #000000;
+        }
+
+        * {
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--secondary);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: var(--dark);
+            padding: 1rem 2rem;
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-logo {
+            color: var(--light);
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-item {
+            margin-left: 2rem;
+        }
+
+        .navbar-link {
+            color: var(--light);
+            text-decoration: none;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-link:hover {
+            color: var(--primary);
+        }
+
+        /* Hamburger Menu */
+        .navbar-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .bar {
+            width: 25px;
+            height: 3px;
+            background: var(--light);
+            margin: 4px 0;
+            transition: all 0.3s ease;
+        }
+
+        /* Responsive Navbar */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                background: var(--dark);
+                position: absolute;
+                top: 60px;
+                left: 0;
+                padding: 1rem;
+            }
+
+            .navbar-menu.active {
+                display: flex;
+            }
+
+            .navbar-item {
+                margin: 1rem 0;
+                text-align: center;
+            }
+
+            .navbar-toggle {
+                display: flex;
+            }
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            background: var(--dark);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 800px; /* Limit maximum width for larger screens */
+            margin-top: 2rem;
+        }
+
+        /* Canvas Styling */
+        canvas {
+            background: var(--light);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            cursor: crosshair;
+            width: 100%; /* Make canvas responsive */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 500px; /* Limit maximum height */
+        }
+
+        /* Button Styling */
+        .controls {
+            margin-top: 1rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--light);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+            width: 100%; /* Full width on small screens */
+            max-width: 200px; /* Limit button width on larger screens */
+        }
+
+        button:hover {
+            background: #ff4444;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .canvas-container {
+                padding: 0.5rem;
+            }
+
+            canvas {
+                max-height: 300px; /* Adjust canvas height for smaller screens */
+            }
+
+            button {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            canvas {
+                max-height: 200px; /* Further adjust canvas height for very small screens */
+            }
+
+            button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="navbar-logo">Free Sketch</a>
+        <ul class="navbar-menu">
+            <li class="navbar-item"><a href="index.html" class="navbar-link">Home</a></li>
+           
+        </ul>
+        <div class="navbar-toggle">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+    </nav>
+
+    <!-- Canvas Drawing App -->
+    <h1>Drawing Canvas</h1>
+    <div class="canvas-container">
+        <canvas id="drawingCanvas" width="800" height="500"></canvas>
+        <div class="controls">
+            <button id="clearButton">Clear Canvas</button>
+        </div>
+    </div>
+
+    <script>
+        
+        const navbarToggle = document.querySelector('.navbar-toggle');
+        const navbarMenu = document.querySelector('.navbar-menu');
+
+        navbarToggle.addEventListener('click', () => {
+            navbarMenu.classList.toggle('active');
+        });
+
+        
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isDrawing = false;
+
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            const pos = getMousePos(canvas, e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                const pos = getMousePos(canvas, e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = 'var(--primary)';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+            ctx.closePath();
+        });
+
+        canvas.addEventListener('mouseout', () => {
+            isDrawing = false;
+            ctx.closePath();
+        });
+
+        const clearButton = document.getElementById('clearButton');
+        clearButton.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            canvas.width = container.clientWidth - 2 * 16; 
+            canvas.height = (canvas.width * 500) / 800; 
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); 
+    </script>
+</body>
+</html>
