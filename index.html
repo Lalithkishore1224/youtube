@@ -122,6 +122,43 @@
         .mode-switch {
             margin: 1rem 0;
         }
+
+        .history-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0,0,0,0.8);
+            border-radius: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .history-item button {
+            background: #ff4444;
+            padding: 0.5rem 1rem;
+        }
+
+        .copy-button {
+            background: #4CAF50;
+            padding: 0.5rem 1rem;
+            margin-left: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -154,11 +191,18 @@
                 <div id="notesList"></div>
             </div>
         </div>
+
+        <!-- History Section -->
+        <div class="history-section">
+            <h2>History</h2>
+            <div id="historyList"></div>
+        </div>
     </div>
 
     <script>
         let currentMode = 'video';
         let notes = JSON.parse(localStorage.getItem('cleanViewerNotes')) || [];
+        let history = JSON.parse(localStorage.getItem('cleanViewerHistory')) || [];
 
         function switchMode(mode) {
             currentMode = mode;
@@ -203,6 +247,9 @@
 
             const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&playsinline=1`;
             document.getElementById('videoPlayer').src = embedUrl;
+
+            // Add to history
+            addToHistory(input, videoId);
         }
 
         function loadChannel(input) {
@@ -223,6 +270,41 @@
             const playlistId = 'UU' + channelId.slice(2);
             const embedUrl = `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistId}&autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3`;
             document.getElementById('videoPlayer').src = embedUrl;
+
+            // Add to history
+            addToHistory(input, channelId);
+        }
+
+        function addToHistory(input, id) {
+            const thumbnailUrl = `https://img.youtube.com/vi/${id}/0.jpg`;
+            const historyItem = {
+                id: Date.now(),
+                url: input,
+                thumbnail: thumbnailUrl,
+                timestamp: new Date().toLocaleString(),
+                videoId: id
+            };
+
+            history.push(historyItem);
+            localStorage.setItem('cleanViewerHistory', JSON.stringify(history));
+            displayHistory();
+        }
+
+        function displayHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = history.map(item => `
+                <div class="history-item">
+                    <img src="${item.thumbnail}" alt="Video Thumbnail">
+                    <span>${item.url}</span>
+                    <button onclick="deleteHistoryItem(${item.id})">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistoryItem(id) {
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem('cleanViewerHistory', JSON.stringify(history));
+            displayHistory();
         }
 
         function showError(message) {
@@ -255,6 +337,7 @@
                     <div class="timestamp">${note.timestamp}</div>
                     <p>${note.content}</p>
                     <button onclick="deleteNote(${note.id})">Delete</button>
+                    <button class="copy-button" onclick="copyNote('${note.content.replace(/'/g, "\\'")}')">Copy</button>
                 </div>
             `).join('');
         }
@@ -263,6 +346,12 @@
             notes = notes.filter(note => note.id !== id);
             localStorage.setItem('cleanViewerNotes', JSON.stringify(notes));
             displayNotes();
+        }
+
+        function copyNote(content) {
+            navigator.clipboard.writeText(content).then(() => {
+                alert('Note copied to clipboard!');
+            });
         }
 
         // Fullscreen handling
@@ -281,6 +370,7 @@
 
         // Initial setup
         displayNotes();
+        displayHistory();
     </script>
 </body>
 </html>
