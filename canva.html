@@ -5,7 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Free Sketch</title>
     <style>
-        /* General Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root {
+            --primary: #ff0000;
+            --secondary: #282828;
+            --light: #ffffff;
+            --dark: #000000;
+        }
+
+        * {
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
         :root {
             --primary: #ff0000;
@@ -126,23 +139,36 @@
             max-width: 800px; /* Limit maximum width for larger screens */
             margin-top: 2rem;
         }
+        body {
+            background: var(--secondary);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
 
-        /* Canvas Styling */
+        .canvas-container {
+            background: var(--dark);
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 2rem;
+        }
+
         canvas {
             background: var(--light);
             border: 2px solid var(--primary);
             border-radius: 8px;
             cursor: crosshair;
-            width: 100%; 
-            height: auto; 
-            max-height: 500px; /
+            width: 100%;
+            height: auto;
+            max-height: 500px;
         }
-
-        
-        .controls {
-            margin-top: 1rem;
-        }
-
         button {
             background: var(--primary);
             color: var(--light);
@@ -152,15 +178,19 @@
             cursor: pointer;
             font-size: 1rem;
             transition: background 0.3s ease;
-            width: 100%; 
-            max-width: 200px; 
+            width: 100%; /* Full width on small screens */
+            max-width: 200px; /* Limit button width on larger screens */
         }
+        @media (max-width: 480px) {
+            canvas {
+                max-height: 200px; 
+            }
 
-        button:hover {
-            background: #ff4444;
+            button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
         }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
             .canvas-container {
                 padding: 0.5rem;
@@ -175,21 +205,11 @@
                 font-size: 0.9rem;
             }
         }
-
-        @media (max-width: 480px) {
-            canvas {
-                max-height: 200px; 
-            }
-
-            button {
-                padding: 0.5rem 0.8rem;
-                font-size: 0.8rem;
-            }
-        }
+    </style>
     </style>
 </head>
 <body>
-    
+    <!-- Navbar -->
     <nav class="navbar">
         <a href="#" class="navbar-logo">Free Sketch</a>
         <ul class="navbar-menu">
@@ -202,8 +222,6 @@
             <span class="bar"></span>
         </div>
     </nav>
-
-    <!-- Canvas Drawing App -->
     <h1>Drawing Canvas</h1>
     <div class="canvas-container">
         <canvas id="drawingCanvas" width="800" height="500"></canvas>
@@ -213,6 +231,26 @@
     </div>
 
     <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isDrawing = false;
+
+        function getMousePos(canvas, evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+
+        function getTouchPos(canvas, touch) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+        }
         const navbarToggle = document.querySelector('.navbar-toggle');
         const navbarMenu = document.querySelector('.navbar-menu');
 
@@ -220,59 +258,62 @@
             navbarMenu.classList.toggle('active');
         });
 
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
 
-        let isDrawing = false;
 
-        function getPos(canvas, evt) {
-            const rect = canvas.getBoundingClientRect();
-            let x, y;
-            if (evt.touches) {
-                x = evt.touches[0].clientX - rect.left;
-                y = evt.touches[0].clientY - rect.top;
-            } else {
-                x = evt.clientX - rect.left;
-                y = evt.clientY - rect.top;
-            }
-            return { x, y };
-        }
-
-        function startDrawing(e) {
+        canvas.addEventListener('mousedown', (e) => {
             isDrawing = true;
-            const pos = getPos(canvas, e);
+            const pos = getMousePos(canvas, e);
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
-            e.preventDefault(); // Prevent scrolling on touch devices
-        }
+        });
 
-        function draw(e) {
+        canvas.addEventListener('mousemove', (e) => {
             if (isDrawing) {
-                const pos = getPos(canvas, e);
+                const pos = getMousePos(canvas, e);
                 ctx.lineTo(pos.x, pos.y);
                 ctx.strokeStyle = 'var(--primary)';
                 ctx.lineWidth = 4;
                 ctx.stroke();
-                e.preventDefault(); // Prevent scrolling on touch devices
             }
-        }
+        });
 
-        function stopDrawing() {
+        canvas.addEventListener('mouseup', () => {
             isDrawing = false;
             ctx.closePath();
-        }
+        });
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('mouseout', () => {
+            isDrawing = false;
+            ctx.closePath();
+        });
 
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDrawing = true;
+            const touch = e.touches[0];
+            const pos = getTouchPos(canvas, touch);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
 
-        const clearButton = document.getElementById('clearButton');
-        clearButton.addEventListener('click', () => {
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (isDrawing) {
+                const touch = e.touches[0];
+                const pos = getTouchPos(canvas, touch);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = 'var(--primary)';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDrawing = false;
+            ctx.closePath();
+        });
+
+        document.getElementById('clearButton').addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
 
@@ -283,7 +324,7 @@
         }
 
         window.addEventListener('resize', resizeCanvas);
-        resizeCanvas(); 
+        resizeCanvas();
     </script>
 </body>
 </html>
