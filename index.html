@@ -8,6 +8,32 @@
     
 </head>
 <body>
+    <!-- Navbar -->
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="#" class="navbar-logo">HOME</a>
+        <div class="navbar-toggle" id="mobile-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        
+        </div>
+        <ul class="navbar-menu">
+            <li class="navbar-item">
+                <a href="compiler.html" id="compiler-link" class="navbar-link">Compiler</a>
+            </li>
+            <li class="navbar-item">
+                <a href="about.html" class="navbar-link">About</a>
+            </li>
+            <li class="navbar-item">
+                <a href="canva.html" class="navbar-link">Canvas</a>
+            </li>
+
+          
+        </ul>
+    </div>
+</nav>
     <div class="header">
         <h1>Clean YouTube Viewer</h1>
         <div class="mode-switch">
@@ -481,5 +507,29 @@
         displayNotes();
         displayHistory();
     </script>
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navbarMenu = document.querySelector('.navbar-menu');
+        
+        mobileMenu.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+            navbarMenu.classList.toggle('active');
+        });
+        document.getElementById('compiler-link').addEventListener('click', function(event) {
+    event.preventDefault(); 
+
+   
+    const userChoice = confirm("Do you want to open the Compiler in a new tab?");
+    
+    if (userChoice) {
+        
+        window.open('compiler.html', '_blank');
+    } else {
+       
+        window.location.href = 'compiler.html';
+    }
+});
+        </script>
+
 </body>
 </html>
